@@ -1,10 +1,47 @@
 {
+  "aiConfiguration:open": "Open AI Configuration view",
+  "aiHistory:clear": "AI History: Clear History",
+  "aiHistory:open": "Open AI History view",
+  "aiHistory:sortChronologically": "AI History: Sort chronologically",
+  "aiHistory:sortReverseChronologically": "AI History: Sort reverse chronologically",
+  "debug.breakpoint.editCondition": "Edit Condition...",
+  "notebook.cell.changeToCode": "Change Cell to Code",
+  "notebook.cell.changeToMarkdown": "Change Cell to Markdown",
+  "notebook.cell.insertMarkdownCellAbove": "Insert Markdown Cell Above",
+  "notebook.cell.insertMarkdownCellBelow": "Insert Markdown Cell Below",
   "terminal:new:profile": "Create New Integrated Terminal from a Profile",
   "terminal:profile:default": "Choose the default Terminal Profile",
   "theia": {
     "callhierarchy": {
       "noCallers": "No callers have been detected.",
       "open": "Open Call Hierarchy"
+    },
+    "collaboration": {
+      "collaborate": "Collaborate",
+      "collaboration": "Collaboration",
+      "collaborationWorkspace": "Collaboration Workspace",
+      "connected": "Connected",
+      "connectedSession": "Connected to a collaboration session",
+      "copiedInvitation": "Invitation code copied to clipboard.",
+      "copyAgain": "Copy Again",
+      "createRoom": "Create New Collaboration Session",
+      "creatingRoom": "Creating Session",
+      "end": "End Collaboration Session",
+      "endDetail": "Terminate the session, cease content sharing, and revoke access for others.",
+      "enterCode": "Enter collaboration session code",
+      "failedCreate": "Failed to create room: {0}",
+      "failedJoin": "Failed to join room: {0}",
+      "invite": "Invite Others",
+      "inviteDetail": "Copy the invitation code for sharing it with others to join the session.",
+      "joinRoom": "Join Collaboration Session",
+      "joiningRoom": "Joining Session",
+      "leave": "Leave Collaboration Session",
+      "leaveDetail": "Disconnect from the current collaboration session and close the workspace.",
+      "selectCollaboration": "Select collaboration option",
+      "sharedSession": "Shared a collaboration session",
+      "startSession": "Start or join collaboration session",
+      "userWantsToJoin": "User '{0}' wants to join the collaboration room",
+      "whatToDo": "What would you like to do with other collaborators?"
     },
     "core": {
       "about": {
@@ -29,6 +66,14 @@
         "showPreviousTabInGroup": "Switch to Previous Tab in Group",
         "toggleMaximized": "Toggle Maximized"
       },
+      "copyInfo": "Open a file first to copy its path",
+      "copyWarn": "Please use the browser's copy command or shortcut.",
+      "cutWarn": "Please use the browser's cut command or shortcut.",
+      "enhancedPreview": {
+        "classic": "Display a simple preview of the tab with basic information.",
+        "enhanced": "Display an enhanced preview of the tab with additional information.",
+        "visual": "Display a visual preview of the tab."
+      },
       "file": {
         "browse": "Browse"
       },
@@ -43,7 +88,12 @@
         "pc": "PC Keyboards",
         "tryDetect": "Try to detect the keyboard layout from browser information and pressed keys."
       },
+      "navigator": {
+        "clipboardWarn": "Access to the clipboard is denied. Check your browser's permission.",
+        "clipboardWarnFirefox": "Clipboard API is not available. It can be enabled by '{0}' preference on '{1}' page. Then reload Theia. Note, it will allow FireFox getting full access to the system clipboard."
+      },
       "offline": "Offline",
+      "pasteWarn": "Please use the browser's paste command or shortcut.",
       "quitMessage": "Any unsaved changes will not be saved.",
       "resetWorkbenchLayout": "Reset Workbench Layout",
       "searchbox": {
@@ -51,43 +101,66 @@
         "next": "Next (Down)",
         "previous": "Previous (Up)"
       },
+      "secondaryWindow": {
+        "alwaysOnTop": "When enabled, the secondary window stays above all other windows, including those of different applications.",
+        "description": "Sets the initial position and size of the extracted secondary window.",
+        "fullSize": "The position and size of the extracted widget will be the same as the running Theia application.",
+        "halfWidth": "The position and size of the extracted widget will be half the width of the running Theia application.",
+        "originalSize": "The position and size of the extracted widget will be the same as the original widget."
+      },
       "silentNotifications": "Controls whether to suppress notification popups.",
-      "tabMaximize": "Controls whether to maximize tabs on double click."
+      "tabDefaultSize": "Specifies the default size for tabs.",
+      "tabMaximize": "Controls whether to maximize tabs on double click.",
+      "tabMinimumSize": "Specifies the minimum size for tabs.",
+      "tabShrinkToFit": "Shrink tabs to fit available space."
     },
     "debug": {
       "addConfigurationPlaceholder": "Select workspace root to add configuration to",
+      "breakpoint": "breakpoint",
       "compound-cycle": "Launch configuration '{0}' contains a cycle with itself",
       "continueAll": "Continue All",
       "copyExpressionValue": "Copy Expression Value",
+      "dataBreakpoint": "data breakpoint",
       "debugVariableInput": "Set {0} Value",
+      "entry": "entry",
+      "exception": "exception",
+      "functionBreakpoint": "function breakpoint",
+      "goto": "goto",
       "instruction-breakpoint": "Instruction Breakpoint",
+      "instructionBreakpoint": "instruction breakpoint",
       "missingConfiguration": "Dynamic configuration '{0}:{1}' is missing or not applicable",
+      "pause": "pause",
       "pauseAll": "Pause All",
       "reveal": "Reveal",
+      "step": "step",
       "threads": "Threads",
       "toggleTracing": "Enable/disable tracing communications with debug adapters"
     },
     "editor": {
-      "diffEditor.diffAlgorithm.experimental": "Uses an experimental diffing algorithm.",
-      "diffEditor.diffAlgorithm.smart": "Uses the default diffing algorithm.",
-      "diffEditor.renderMarginRevertIcon": "When enabled, the diff editor shows arrows in its glyph margin to revert changes.",
+      "diffEditor.wordWrap2": "Lines will wrap according to the `#editor.wordWrap#` setting.",
       "dirtyEncoding": "The file is dirty. Please save it first before reopening it with another encoding.",
-      "editor.codeActionWidget.showHeaders": "Enable/disable showing group headers in the code action menu.",
-      "editor.formatOnSaveMode.modificationsIfAvailable": "Will attempt to format modifications only (requires source control). If source control can't be used, then the whole file will be formatted.",
+      "editor.accessibilitySupport0": "Use platform APIs to detect when a Screen Reader is attached",
+      "editor.accessibilitySupport1": "Optimize for usage with a Screen Reader",
+      "editor.accessibilitySupport2": "Assume a screen reader is not attached",
+      "editor.bracketPairColorization.enabled": "Controls whether bracket pair colorization is enabled or not. Use `#workbench.colorCustomizations#` to override the bracket highlight colors.",
+      "editor.codeActionWidget.includeNearbyQuickfixes": "Enable/disable showing nearest quickfix within a line when not currently on a diagnostic.",
+      "editor.detectIndentation": "Controls whether `#editor.tabSize#` and `#editor.insertSpaces#` will be automatically detected when a file is opened based on the file contents.",
+      "editor.dropIntoEditor.enabled": "Controls whether you can drag and drop a file into a text editor by holding down `shift` (instead of opening the file in an editor).",
+      "editor.hover.hidingDelay": "Controls the delay in milliseconds after thich the hover is hidden. Requires `editor.hover.sticky` to be enabled.",
       "editor.inlayHints.enabled1": "Inlay hints are showing by default and hide when holding Ctrl+Alt",
       "editor.inlayHints.enabled2": "Inlay hints are hidden by default and show when holding Ctrl+Alt",
-      "editor.minimap.autohide": "Controls whether the minimap is hidden automatically.",
-      "editor.multiCursorModifier": "The modifier to be used to add multiple cursors with the mouse. The Go to Definition and Open Link mouse gestures will adapt such that they do not conflict with the [multicursor modifier](https://code.visualstudio.com/docs/editor/codebasics#_multicursor-modifier).",
+      "editor.inlayHints.fontFamily": "Controls font family of inlay hints in the editor. When set to empty, the `#editor.fontFamily#` is used.",
+      "editor.inlayHints.fontSize": "Controls font size of inlay hints in the editor. As default the `#editor.fontSize#` is used when the configured value is less than `5` or greater than the editor font size.",
+      "editor.insertSpaces": "Insert spaces when pressing `Tab`. This setting is overridden based on the file contents when `#editor.detectIndentation#` is on.",
+      "editor.occurrencesHighlight": "Controls whether the editor should highlight semantic symbol occurrences.",
       "editor.quickSuggestions": "Controls whether suggestions should automatically show up while typing. This can be controlled for typing in comments, strings, and other code. Quick suggestion can be configured to show as ghost text or with the suggest widget. Also be aware of the '#editor.suggestOnTriggerCharacters#'-setting which controls if suggestions are triggered by special characters.",
-      "editor.showFoldingControls1": "Never show the folding controls and reduce the gutter size.",
-      "editor.stickyScroll.enabled": "Shows the nested current scopes during the scroll at the top of the editor.",
-      "editor.stickyScroll.maxLineCount": "Defines the maximum number of sticky lines to show.",
-      "editor.suggest.matchOnWordStartOnly": "When enabled IntelliSense filtering requires that the first character matches on a word start, e.g `c` on `Console` or `WebContext` but _not_ on `description`. When disabled IntelliSense will show more results but still sorts them by match quality.",
-      "files.autoSave": "Controls [auto save](https://code.visualstudio.com/docs/editor/codebasics#_save-auto-save) of editors that have unsaved changes.",
-      "files.autoSave.afterDelay": "An editor with changes is automatically saved after the configured `#files.autoSaveDelay#`.",
-      "files.autoSave.off": "An editor with changes is never automatically saved.",
-      "files.autoSave.onFocusChange": "An editor with changes is automatically saved when the editor loses focus.",
-      "files.autoSave.onWindowChange": "An editor with changes is automatically saved when the window loses focus.",
+      "editor.stickyScroll.scrollWithEditor": "Enable scrolling of the sticky scroll widget with the editor's horizontal scrollbar.",
+      "editor.suggestFontSize": "Font size for the suggest widget. When set to `0`, the value of `#editor.fontSize#` is used.",
+      "editor.suggestLineHeight": "Line height for the suggest widget. When set to `0`, the value of `#editor.lineHeight#` is used. The minimum value is 8.",
+      "editor.tabSize": "The number of spaces a tab is equal to. This setting is overridden based on the file contents when `#editor.detectIndentation#` is on.",
+      "editor.useTabStops": "Inserting and deleting whitespace follows tab stops.",
+      "editor.wordBasedSuggestions": "Controls whether completions should be computed based on words in the document.",
+      "editor.wordBasedSuggestionsMode": "Controls from which documents word based completions are computed.",
       "formatOnSaveTimeout": "Timeout in milliseconds after which the formatting that is run on file save is cancelled.",
       "persistClosedEditors": "Controls whether to persist closed editor history for the workspace across window reloads.",
       "showAllEditors": "Show All Opened Editors",
@@ -98,12 +171,16 @@
     "file-search": {
       "toggleIgnoredFiles": " (Press {0} to show/hide ignored files)"
     },
+    "fileDialog": {
+      "showHidden": "Show hidden files"
+    },
     "fileSystem": {
       "fileResource": {
         "overWriteBody": "Do you want to overwrite the changes made to '{0}' on the file system?"
       }
     },
     "filesystem": {
+      "copiedToClipboard": "Copied the download link to the clipboard.",
       "copyDownloadLink": "Copy Download Link",
       "dialog": {
         "initialLocation": "Go To Initial Location",
@@ -127,18 +204,22 @@
       "prepareDownloadLink": "Preparing download link...",
       "processedOutOf": "Processed {0} out of {1}",
       "replaceTitle": "Replace File",
+      "uploadFailed": "An error occurred while uploading a file. {0}",
       "uploadFiles": "Upload Files...",
       "uploadedOutOf": "Uploaded {0} out of {1}"
     },
     "getting-started": {
       "apiComparator": "{0} API Compatibility",
       "newExtension": "Building a New Extension",
-      "newPlugin": "Building a New Plugin"
+      "newPlugin": "Building a New Plugin",
+      "startup-editor": {
+        "welcomePage": "Open the Welcome page, with content to aid in getting started with {0} and extensions."
+      }
     },
     "git": {
       "aFewSecondsAgo": "a few seconds ago",
       "addSignedOff": "Add Signed-off-by",
-      "amendReuseMessag": "To reuse the last commit message, press 'Enter' or 'Escape' to cancel.",
+      "amendReuseMessage": "To reuse the last commit message, press 'Enter' or 'Escape' to cancel.",
       "amendRewrite": "Rewrite previous commit message. Press 'Enter' to confirm or 'Escape' to cancel.",
       "checkoutCreateLocalBranchWithName": "Create a new local branch with name: {0}. Press 'Enter' to confirm or 'Escape' to cancel.",
       "checkoutProvideBranchName": "Please provide a branch name. ",
@@ -155,18 +236,33 @@
       "gitDecorationsColors": "Use color decoration in the navigator.",
       "mergeQuickPickPlaceholder": "Pick a branch to merge into the currently active {0} branch:",
       "missingUserInfo": "Make sure you configure your 'user.name' and 'user.email' in git.",
+      "noHistoryForError": "There is no history available for {0}",
       "noPreviousCommit": "No previous commit to amend",
       "noRepositoriesSelected": "No repositories were selected.",
+      "prepositionIn": "in",
       "repositoryNotInitialized": "Repository {0} is not yet initialized.",
       "stashChanges": "Stash changes. Press 'Enter' to confirm or 'Escape' to cancel.",
       "stashChangesWithMessage": "Stash changes with message: {0}. Press 'Enter' to confirm or 'Escape' to cancel.",
+      "tabTitleIndex": "{0} (Index)",
+      "tabTitleWorkingTree": "{0} (Working tree)",
       "toggleBlameAnnotations": "Toggle Blame Annotations"
     },
     "keybinding-schema-updater": {
       "deprecation": "Use `when` clause instead."
     },
     "keymaps": {
+      "addKeybindingTitle": "Add Keybinding for {0}",
+      "editKeybinding": "Edit Keybinding...",
       "editKeybindingTitle": "Edit Keybinding for {0}",
+      "editWhenExpression": "Edit When Expression...",
+      "editWhenExpressionTitle": "Edit When Expression for {0}",
+      "keybinding": {
+        "copy": "Copy Keybinding",
+        "copyCommandId": "Copy Keybinding Command ID",
+        "copyCommandTitle": "Copy Keybinding Command Title",
+        "edit": "Edit Keybinding...",
+        "editWhenExpression": "Edit Keybinding When Expression..."
+      },
       "keybindingCollidesValidation": "keybinding currently collides",
       "requiredKeybindingValidation": "keybinding value is required",
       "resetKeybindingConfirmation": "Do you really want to reset this keybinding to its default value?",
@@ -270,6 +366,8 @@
     },
     "navigator": {
       "autoReveal": "Auto Reveal",
+      "clipboardWarn": "Access to the clipboard is denied. Check your browser's permission.",
+      "clipboardWarnFirefox": "Clipboard API is not available. It can be enabled by '{0}' preference on '{1}' page. Then reload Theia. Note, it will allow FireFox getting full access to the system clipboard.",
       "refresh": "Refresh in Explorer",
       "reveal": "Reveal in Explorer",
       "toggleHiddenFiles": "Toggle Hidden Files"
@@ -280,6 +378,7 @@
       "hiddenChannels": "Hidden Channels",
       "hideOutputChannel": "Hide Output Channel...",
       "maxChannelHistory": "The maximum number of entries in an output channel.",
+      "outputChannels": "Output Channels",
       "showOutputChannel": "Show Output Channel..."
     },
     "plugin": {
@@ -289,6 +388,9 @@
       "alreadyRunning": "Hosted instance is already running.",
       "debugInstance": "Debug Instance",
       "debugMode": "Using inspect or inspect-brk for Node.js debug",
+      "debugPorts": {
+        "debugPort": "Port to use for this server's Node.js debug"
+      },
       "devHost": "Development Host",
       "failed": "Failed to run hosted plugin instance: {0}",
       "hostedPlugin": "Hosted Plugin",
@@ -313,9 +415,16 @@
       "watchMode": "Run watcher on plugin under development"
     },
     "plugin-ext": {
+      "authentication-main": {
+        "loginTitle": "Login"
+      },
       "plugins": "Plugins",
       "webviewTrace": "Controls communication tracing with webviews.",
       "webviewWarnIfUnsecure": "Warns users that webviews are currently deployed unsecurely."
+    },
+    "preferences": {
+      "hostedPlugin": "Hosted Plugin",
+      "toolbar": "Toolbar"
     },
     "preview": {
       "openByDefault": "Open the preview instead of the editor by default."
@@ -339,6 +448,9 @@
       "config.untrackedChanges.hidden": "hidden",
       "config.untrackedChanges.mixed": "mixed",
       "config.untrackedChanges.separate": "separate",
+      "dirtyDiff": {
+        "close": "Close Change Peek View"
+      },
       "history": "History",
       "noRepositoryFound": "No repository found",
       "unamend": "Unamend",
@@ -354,12 +466,12 @@
       "extract-widget": "Move View to Secondary Window"
     },
     "shell-area": {
-      "secondary": "Secondary Window",
-      "top": "Top"
+      "secondary": "Secondary Window"
     },
     "task": {
       "attachTask": "Attach Task...",
       "clearHistory": "Clear History",
+      "noTaskToRun": "No task to run found. Configure Tasks...",
       "openUserTasks": "Open User Tasks"
     },
     "terminal": {
@@ -372,9 +484,9 @@
       "profileIcon": "A codicon ID to associate with the terminal icon.\nterminal-tmux:\"$(terminal-tmux)\"",
       "profileNew": "New Terminal (With Profile)...",
       "profilePath": "The path of the shell that this profile uses.",
-      "profileSource": "A profile source that will auto detect the paths to the shell. Note that non-standard executable locations are not supported and must be created manually in a new profile.",
       "profiles": "The profiles to present when creating a new terminal. Set the path property manually with optional args.\nSet an existing profile to `null` to hide the profile from the list, for example: `\"{0}\": null`.",
       "rendererType": "Controls how the terminal is rendered.",
+      "rendererTypeDeprecationMessage": "The renderer type is no longer supported as an option.",
       "selectProfile": "Select a profile for the new terminal",
       "shell.deprecated": "This is deprecated, the new recommended way to configure your default shell is by creating a terminal profile in 'terminal.integrated.profiles.{0}' and setting its profile name as the default in 'terminal.integrated.defaultProfile.{0}.'",
       "shellArgsLinux": "The command line arguments to use when on the Linux terminal.",
@@ -383,6 +495,12 @@
       "shellLinux": "The path of the shell that the terminal uses on Linux (default: '{0}'}).",
       "shellOsx": "The path of the shell that the terminal uses on macOS (default: '{0}'}).",
       "shellWindows": "The path of the shell that the terminal uses on Windows. (default: '{0}')."
+    },
+    "test": {
+      "cancelAllTestRuns": "Cancel All Test Runs",
+      "stackFrameAt": "at",
+      "testRunDefaultName": "{0} run {1}",
+      "testRuns": "Test Runs"
     },
     "toolbar": {
       "addCommand": "Add Command to Toolbar",
@@ -409,13 +527,19 @@
       "supertypeHierarchy": "Supertype Hierarchy"
     },
     "vsx-registry": {
+      "confirmDialogMessage": "The extension \"{0}\" is unverified and might pose a security risk.",
+      "confirmDialogTitle": "Are you sure you want to proceed with the installation ?",
       "downloadCount": "Download count: {0}",
       "errorFetching": "Error fetching extensions.",
+      "errorFetchingConfigurationHint": "This could be caused by network configuration issues.",
       "failedInstallingVSIX": "Failed to install {0} from VSIX.",
       "invalidVSIX": "The selected file is not a valid \"*.vsix\" plugin.",
       "license": "License: {0}",
-      "recommendedExtensions": "A list of the names of extensions recommended for use in this workspace.",
+      "onlyShowVerifiedExtensionsDescription": "This allows the {0} to only show verified extensions.",
+      "onlyShowVerifiedExtensionsTitle": "Only Show Verified Extensions",
+      "recommendedExtensions": "Do you want to install the recommended extensions for this repository?",
       "searchPlaceholder": "Search Extensions in {0}",
+      "showInstalled": "Show Installed Extensions",
       "showRecommendedExtensions": "Controls whether notifications are shown for extension recommendations.",
       "vsx-extensions-contribution": {
         "update-version-uninstall-error": "Error while removing the extension: {0}.",
@@ -437,8 +561,9 @@
       "confirmMessage.uriMultiple": "Do you really want to delete all the {0} selected files?",
       "confirmMessage.uriSingle": "Do you really want to delete {0}?",
       "duplicate": "Duplicate",
-      "failApply": "Could not apply changes to new file",
       "failSaveAs": "Cannot run \"{0}\" for the current widget.",
+      "newFilePlaceholder": "File Name",
+      "newFolderPlaceholder": "Folder Name",
       "noErasure": "Note: Nothing will be erased from disk",
       "openRecentPlaceholder": "Type the name of the workspace you want to open",
       "openRecentWorkspace": "Open Recent Workspace...",

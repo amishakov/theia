@@ -11,7 +11,7 @@
 // with the GNU Classpath Exception which is available at
 // https://www.gnu.org/software/classpath/license.html.
 //
-// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-only WITH Classpath-exception-2.0
 // *****************************************************************************
 
 /*---------------------------------------------------------------------------------------------
@@ -47,6 +47,13 @@ export class DebugStackFrame extends DebugStackFrameData implements TreeElement 
 
     get id(): string {
         return this.session.id + ':' + this.thread.id + ':' + this.raw.id;
+    }
+
+    /**
+     * Returns the frame identifier from the debug protocol.
+     */
+    get frameId(): number {
+        return this.raw.id;
     }
 
     protected _source: DebugSource | undefined;

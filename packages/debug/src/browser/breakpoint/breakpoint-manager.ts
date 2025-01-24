@@ -11,7 +11,7 @@
 // with the GNU Classpath Exception which is available at
 // https://www.gnu.org/software/classpath/license.html.
 //
-// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-only WITH Classpath-exception-2.0
 // *****************************************************************************
 
 import * as deepEqual from 'fast-deep-equal';
@@ -75,7 +75,9 @@ export class BreakpointManager extends MarkerManager<SourceBreakpoint> {
                 added.push(newMarker);
             } else {
                 // We emit all existing markers as 'changed', but we only fire an event if something really did change.
-                didChangeMarkers ||= !!added.length || !deepEqual(oldMarker, newMarker);
+                // We also fire an event if oldMarker === newMarker, as we cannot actually detect a change in this case
+                // (https://github.com/eclipse-theia/theia/issues/12546).
+                didChangeMarkers ||= !!added.length || oldMarker === newMarker || !deepEqual(oldMarker, newMarker);
                 changed.push(newMarker);
             }
         }
@@ -197,6 +199,14 @@ export class BreakpointManager extends MarkerManager<SourceBreakpoint> {
         const breakpoint = this.getExceptionBreakpoint(filter);
         if (breakpoint) {
             breakpoint.enabled = !breakpoint.enabled;
+            this.fireOnDidChangeMarkers(BreakpointManager.EXCEPTION_URI);
+        }
+    }
+
+    updateExceptionBreakpoint(filter: string, options: Partial<Pick<ExceptionBreakpoint, 'condition' | 'enabled'>>): void {
+        const breakpoint = this.getExceptionBreakpoint(filter);
+        if (breakpoint) {
+            Object.assign(breakpoint, options);
             this.fireOnDidChangeMarkers(BreakpointManager.EXCEPTION_URI);
         }
     }

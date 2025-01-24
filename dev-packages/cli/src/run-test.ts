@@ -11,18 +11,18 @@
 // with the GNU Classpath Exception which is available at
 // https://www.gnu.org/software/classpath/license.html.
 //
-// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-only WITH Classpath-exception-2.0
 // *****************************************************************************
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import * as net from 'net';
-import * as puppeteer from 'puppeteer';
+import * as puppeteer from 'puppeteer-core';
 import newTestPage, { TestFileOptions } from './test-page';
 
 export interface TestOptions {
     start: () => Promise<net.AddressInfo>
-    launch?: puppeteer.LaunchOptions
+    launch?: puppeteer.PuppeteerLaunchOptions
     files?: Partial<TestFileOptions>
     coverage?: boolean
 }
@@ -50,8 +50,14 @@ export default async function runTest(options: TestOptions): Promise<void> {
             // the app has focus, to avoid failures of tests that query the UI's state.
             if (launch && launch.devtools) {
                 promises.push(testPage.waitForSelector('#theia-app-shell.p-Widget.theia-ApplicationShell')
-                    .then(e => e.click()));
+                    .then(e => {
+                        // eslint-disable-next-line no-null/no-null
+                        if (e !== null) {
+                            e.click();
+                        }
+                    }));
             }
+
             // Clear application's local storage to avoid reusing previous state
             promises.push(testPage.evaluate(() => localStorage.clear()));
             await Promise.all(promises);
@@ -73,7 +79,10 @@ export default async function runTest(options: TestOptions): Promise<void> {
             }
         }
     });
-
-    const server = await start();
-    await testPage.goto(`http://${server.address}:${server.port}`);
+    const { address, port } = await start();
+    const url = net.isIPv6(address)
+        ? `http://[${address}]:${port}`
+        : `http://${address}:${port}`;
+    await testPage.goto(url);
+    await testPage.bringToFront();
 }

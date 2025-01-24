@@ -11,7 +11,7 @@
 // with the GNU Classpath Exception which is available at
 // https://www.gnu.org/software/classpath/license.html.
 //
-// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-only WITH Classpath-exception-2.0
 // *****************************************************************************
 
 import { injectable, inject, named } from '@theia/core/shared/inversify';
@@ -20,7 +20,7 @@ import { ILogger } from '@theia/core/lib/common/logger';
 import { TerminalProcess, TerminalProcessOptions, ProcessManager, MultiRingBuffer } from '@theia/process/lib/node';
 import { isWindows, isOSX } from '@theia/core/lib/common';
 import URI from '@theia/core/lib/common/uri';
-import { FileUri } from '@theia/core/lib/node/file-uri';
+import { FileUri } from '@theia/core/lib/common/file-uri';
 import { EnvironmentUtils } from '@theia/core/lib/node/environment-utils';
 import { parseArgs } from '@theia/process/lib/node/utils';
 
@@ -39,7 +39,7 @@ export interface ShellProcessOptions {
     isPseudo?: boolean,
 }
 
-function getRootPath(rootURI?: string): string {
+export function getRootPath(rootURI?: string): string {
     if (rootURI) {
         const uri = new URI(rootURI);
         return FileUri.fsPath(uri);
@@ -61,15 +61,16 @@ export class ShellProcess extends TerminalProcess {
         @inject(ILogger) @named('terminal') logger: ILogger,
         @inject(EnvironmentUtils) environmentUtils: EnvironmentUtils,
     ) {
+        const env = { 'COLORTERM': 'truecolor' };
         super(<TerminalProcessOptions>{
             command: options.shell || ShellProcess.getShellExecutablePath(),
             args: options.args || ShellProcess.getShellExecutableArgs(),
             options: {
-                name: 'xterm-color',
+                name: 'xterm-256color',
                 cols: options.cols || ShellProcess.defaultCols,
                 rows: options.rows || ShellProcess.defaultRows,
                 cwd: getRootPath(options.rootURI),
-                env: options.strictEnv !== true ? environmentUtils.mergeProcessEnv(options.env) : options.env,
+                env: options.strictEnv !== true ? Object.assign(env, environmentUtils.mergeProcessEnv(options.env)) : Object.assign(env, options.env),
             },
             isPseudo: options.isPseudo,
         }, processManager, ringBuffer, logger);

@@ -11,9 +11,10 @@
 // with the GNU Classpath Exception which is available at
 // https://www.gnu.org/software/classpath/license.html.
 //
-// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-only WITH Classpath-exception-2.0
 // *****************************************************************************
 
+import { Container } from '@theia/core/shared/inversify';
 import { PreferenceRegistryExtImpl, PreferenceScope } from './preference-registry';
 import * as chai from 'chai';
 import { WorkspaceExtImpl } from '../plugin/workspace';
@@ -38,7 +39,11 @@ describe('PreferenceRegistryExtImpl:', () => {
     const mockWorkspace: WorkspaceExtImpl = { workspaceFolders: [{ uri: workspaceRoot, name: 'workspace-root', index: 0 }] } as WorkspaceExtImpl;
 
     beforeEach(() => {
-        preferenceRegistryExtImpl = new PreferenceRegistryExtImpl(mockRPC, mockWorkspace);
+        const container = new Container();
+        container.bind(RPCProtocol).toConstantValue(mockRPC);
+        container.bind(WorkspaceExtImpl).toConstantValue(mockWorkspace);
+        container.bind(PreferenceRegistryExtImpl).toSelf().inSingletonScope();
+        preferenceRegistryExtImpl = container.get(PreferenceRegistryExtImpl);
     });
 
     describe('Prototype pollution', () => {

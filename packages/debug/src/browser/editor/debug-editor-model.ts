@@ -11,7 +11,7 @@
 // with the GNU Classpath Exception which is available at
 // https://www.gnu.org/software/classpath/license.html.
 //
-// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-only WITH Classpath-exception-2.0
 // *****************************************************************************
 
 import debounce = require('p-debounce');
@@ -24,8 +24,7 @@ import { IEditorHoverOptions } from '@theia/monaco-editor-core/esm/vs/editor/com
 import URI from '@theia/core/lib/common/uri';
 import { Disposable, DisposableCollection, MenuPath, isOSX } from '@theia/core';
 import { ContextMenuRenderer } from '@theia/core/lib/browser';
-import { MonacoConfigurationService } from '@theia/monaco/lib/browser/monaco-frontend-module';
-import { BreakpointManager } from '../breakpoint/breakpoint-manager';
+import { BreakpointManager, SourceBreakpointsChangeEvent } from '../breakpoint/breakpoint-manager';
 import { DebugSourceBreakpoint } from '../model/debug-source-breakpoint';
 import { DebugSessionManager } from '../debug-session-manager';
 import { SourceBreakpoint } from '../breakpoint/breakpoint-marker';
@@ -35,6 +34,7 @@ import { DebugBreakpointWidget } from './debug-breakpoint-widget';
 import { DebugExceptionWidget } from './debug-exception-widget';
 import { DebugProtocol } from '@vscode/debugprotocol';
 import { DebugInlineValueDecorator, INLINE_VALUE_DECORATION_KEY } from './debug-inline-value-decorator';
+import { StandaloneServices } from '@theia/monaco-editor-core/esm/vs/editor/standalone/browser/standaloneServices';
 
 export const DebugEditorModelFactory = Symbol('DebugEditorModelFactory');
 export type DebugEditorModelFactory = (editor: DebugEditor) => DebugEditorModel;
@@ -94,8 +94,8 @@ export class DebugEditorModel implements Disposable {
     @inject(DebugInlineValueDecorator)
     readonly inlineValueDecorator: DebugInlineValueDecorator;
 
-    @inject(MonacoConfigurationService)
-    readonly configurationService: IConfigurationService;
+    @inject(DebugSessionManager)
+    protected readonly sessionManager: DebugSessionManager;
 
     @postConstruct()
     protected init(): void {
@@ -112,7 +112,13 @@ export class DebugEditorModel implements Disposable {
             this.editor.getControl().getModel()!.onDidChangeDecorations(() => this.updateBreakpoints()),
             this.editor.onDidResize(e => this.breakpointWidget.inputSize = e),
             this.sessions.onDidChange(() => this.update()),
-            this.toDisposeOnUpdate
+            this.toDisposeOnUpdate,
+            this.sessionManager.onDidChangeBreakpoints(({ session, uri }) => {
+                if ((!session || session === this.sessionManager.currentSession) && uri.isEqual(this.uri)) {
+                    this.render();
+                }
+            }),
+            this.breakpoints.onDidChangeBreakpoints(event => this.closeBreakpointIfAffected(event)),
         ]);
         this.update();
         this.render();
@@ -147,7 +153,7 @@ export class DebugEditorModel implements Disposable {
                     resource: model.uri,
                     overrideIdentifier: model.getLanguageId(),
                 };
-                const { enabled, delay, sticky } = this.configurationService.getValue<IEditorHoverOptions>('editor.hover', overrides);
+                const { enabled, delay, sticky } = StandaloneServices.get(IConfigurationService).getValue<IEditorHoverOptions>('editor.hover', overrides);
                 codeEditor.updateOptions({
                     hover: {
                         enabled,
@@ -181,6 +187,10 @@ export class DebugEditorModel implements Disposable {
     protected createFrameDecorations(): monaco.editor.IModelDeltaDecoration[] {
         const { currentFrame, topFrame } = this.sessions;
         if (!currentFrame) {
+            return [];
+        }
+
+        if (!currentFrame.thread.stopped) {
             return [];
         }
 
@@ -332,7 +342,9 @@ export class DebugEditorModel implements Disposable {
                 const line = range.startLineNumber;
                 const column = range.startColumn;
                 const oldBreakpoint = this.breakpointRanges.get(decoration)?.[1];
-                const breakpoint = SourceBreakpoint.create(uri, { line, column }, oldBreakpoint);
+                const isLineBreakpoint = oldBreakpoint?.raw.line !== undefined && oldBreakpoint?.raw.column === undefined;
+                const change = isLineBreakpoint ? { line } : { line, column };
+                const breakpoint = SourceBreakpoint.create(uri, change, oldBreakpoint);
                 breakpoints.push(breakpoint);
                 lines.add(line);
             }
@@ -398,16 +410,7 @@ export class DebugEditorModel implements Disposable {
 
     protected handleMouseDown(event: monaco.editor.IEditorMouseEvent): void {
         if (event.target && event.target.type === monaco.editor.MouseTargetType.GUTTER_GLYPH_MARGIN) {
-            if (event.event.rightButton) {
-                this.editor.focus();
-                setTimeout(() => {
-                    this.contextMenu.render({
-                        menuPath: DebugEditorModel.CONTEXT_MENU,
-                        anchor: event.event.browserEvent,
-                        args: [event.target.position!]
-                    });
-                });
-            } else {
+            if (!event.event.rightButton) {
                 this.toggleBreakpoint(event.target.position!);
             }
         }
@@ -444,6 +447,22 @@ export class DebugEditorModel implements Disposable {
         return [];
     }
 
+    protected closeBreakpointIfAffected({ uri, removed }: SourceBreakpointsChangeEvent): void {
+        if (!uri.isEqual(this.uri)) {
+            return;
+        }
+        const position = this.breakpointWidget.position;
+        if (!position) {
+            return;
+        }
+        for (const breakpoint of removed) {
+            if (breakpoint.raw.line === position.lineNumber) {
+                this.breakpointWidget.hide();
+                break;
+            }
+        }
+    }
+
     protected showHover(mouseEvent: monaco.editor.IEditorMouseEvent): void {
         const targetType = mouseEvent.target.type;
         const stopKey = isOSX ? 'metaKey' : 'ctrlKey';
@@ -472,7 +491,7 @@ export class DebugEditorModel implements Disposable {
     protected deltaDecorations(oldDecorations: string[], newDecorations: monaco.editor.IModelDeltaDecoration[]): string[] {
         this.updatingDecorations = true;
         try {
-            return this.editor.getControl().getModel()!.deltaDecorations(oldDecorations, newDecorations);
+            return this.editor.getControl().deltaDecorations(oldDecorations, newDecorations);
         } finally {
             this.updatingDecorations = false;
         }

@@ -11,7 +11,7 @@
 // with the GNU Classpath Exception which is available at
 // https://www.gnu.org/software/classpath/license.html.
 //
-// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-only WITH Classpath-exception-2.0
 // *****************************************************************************
 
 import { TextEditorsExt, EditorChangedPropertiesData, TextEditorPositionData, TextEditorsMain, PLUGIN_RPC_CONTEXT } from '../common/plugin-api-rpc';
@@ -21,11 +21,10 @@ import { Emitter, Event } from '@theia/core/lib/common/event';
 import { EditorsAndDocumentsExtImpl } from './editors-and-documents';
 import { TextEditorExt } from './text-editor';
 import * as Converters from './type-converters';
-import { TextEditorSelectionChangeKind } from './types-impl';
+import { TextEditorSelectionChangeKind, URI } from './types-impl';
 import { IdGenerator } from '../common/id-generator';
 
 export class TextEditorsExtImpl implements TextEditorsExt {
-
     private readonly _onDidChangeTextEditorSelection = new Emitter<theia.TextEditorSelectionChangeEvent>();
     private readonly _onDidChangeTextEditorOptions = new Emitter<theia.TextEditorOptionsChangeEvent>();
     private readonly _onDidChangeTextEditorVisibleRanges = new Emitter<theia.TextEditorVisibleRangesChangeEvent>();
@@ -122,6 +121,14 @@ export class TextEditorsExtImpl implements TextEditorsExt {
     applyWorkspaceEdit(edit: theia.WorkspaceEdit, metadata?: theia.WorkspaceEditMetadata): Promise<boolean> {
         const dto = Converters.fromWorkspaceEdit(edit, this.editorsAndDocuments);
         return this.proxy.$tryApplyWorkspaceEdit(dto, metadata);
+    }
+
+    save(uri: theia.Uri): PromiseLike<theia.Uri | undefined> {
+        return this.proxy.$save(uri).then(components => URI.revive(components));
+    }
+
+    saveAs(uri: theia.Uri): PromiseLike<theia.Uri | undefined> {
+        return this.proxy.$saveAs(uri).then(components => URI.revive(components));
     }
 
     saveAll(includeUntitled?: boolean): PromiseLike<boolean> {

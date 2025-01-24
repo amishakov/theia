@@ -11,12 +11,13 @@
 // with the GNU Classpath Exception which is available at
 // https://www.gnu.org/software/classpath/license.html.
 //
-// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-only WITH Classpath-exception-2.0
 // *****************************************************************************
 
 import { Emitter, Event } from '@theia/core';
-import { injectable } from '@theia/core/shared/inversify';
+import { injectable, unmanaged } from '@theia/core/shared/inversify';
 import { TerminalWidget } from './base/terminal-widget';
+import { ShellTerminalProfile } from './shell-terminal-profile';
 
 export const TerminalProfileService = Symbol('TerminalProfileService');
 export const ContributedTerminalProfileStore = Symbol('ContributedTerminalProfileStore');
@@ -36,6 +37,7 @@ export interface TerminalProfileService {
     getProfile(id: string): TerminalProfile | undefined
     readonly all: [string, TerminalProfile][];
     setDefaultProfile(id: string): void;
+    readonly onDidChangeDefaultShell: Event<string>;
     readonly defaultProfile: TerminalProfile | undefined;
 }
 
@@ -87,11 +89,13 @@ export class DefaultTerminalProfileService implements TerminalProfileService {
 
     protected readonly onAddedEmitter: Emitter<string> = new Emitter();
     protected readonly onRemovedEmitter: Emitter<string> = new Emitter();
+    protected readonly onDidChangeDefaultShellEmitter: Emitter<string> = new Emitter();
 
     onAdded: Event<string> = this.onAddedEmitter.event;
     onRemoved: Event<string> = this.onRemovedEmitter.event;
+    onDidChangeDefaultShell: Event<string> = this.onDidChangeDefaultShellEmitter.event;
 
-    constructor(...stores: TerminalProfileStore[]) {
+    constructor(@unmanaged() ...stores: TerminalProfileStore[]) {
         this.stores = stores;
         for (const store of this.stores) {
             store.onAdded(e => {
@@ -144,6 +148,12 @@ export class DefaultTerminalProfileService implements TerminalProfileService {
             throw new Error(`Cannot set default to unknown profile '${id}' `);
         }
         this.defaultProfileIndex = this.order.indexOf(id);
+
+        if (profile instanceof ShellTerminalProfile && profile.shellPath) {
+            this.onDidChangeDefaultShellEmitter.fire(profile.shellPath);
+        } else {
+            this.onDidChangeDefaultShellEmitter.fire('');
+        }
     }
 
     getProfile(id: string): TerminalProfile | undefined {
