@@ -11,7 +11,7 @@
 // with the GNU Classpath Exception which is available at
 // https://www.gnu.org/software/classpath/license.html.
 //
-// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-only WITH Classpath-exception-2.0
 // *****************************************************************************
 
 import { DisposableCollection, Emitter, Event, MessageService, nls, ProgressService, WaitUntilEvent } from '@theia/core';
@@ -55,11 +55,6 @@ export interface DidChangeBreakpointsEvent {
     uri: URI
 }
 
-export interface DidFocusStackFrameEvent {
-    session: DebugSession;
-    frame: DebugStackFrame | undefined;
-}
-
 export interface DebugSessionCustomEvent {
     readonly body?: any // eslint-disable-line @typescript-eslint/no-explicit-any
     readonly event: string
@@ -94,8 +89,11 @@ export class DebugSessionManager {
     protected readonly onDidReceiveDebugSessionCustomEventEmitter = new Emitter<DebugSessionCustomEvent>();
     readonly onDidReceiveDebugSessionCustomEvent: Event<DebugSessionCustomEvent> = this.onDidReceiveDebugSessionCustomEventEmitter.event;
 
-    protected readonly onDidFocusStackFrameEmitter = new Emitter<DidFocusStackFrameEvent>();
+    protected readonly onDidFocusStackFrameEmitter = new Emitter<DebugStackFrame | undefined>();
     readonly onDidFocusStackFrame = this.onDidFocusStackFrameEmitter.event;
+
+    protected readonly onDidFocusThreadEmitter = new Emitter<DebugThread | undefined>();
+    readonly onDidFocusThread = this.onDidFocusThreadEmitter.event;
 
     protected readonly onDidChangeBreakpointsEmitter = new Emitter<DidChangeBreakpointsEvent>();
     readonly onDidChangeBreakpoints = this.onDidChangeBreakpointsEmitter.event;
@@ -179,7 +177,7 @@ export class DebugSessionManager {
     }
 
     isCurrentEditorFrame(uri: URI | string | monaco.Uri): boolean {
-        return this.currentFrame?.source?.uri.toString() === (uri instanceof URI ? uri : new URI(uri)).toString();
+        return this.currentFrame?.source?.uri.toString() === (uri instanceof URI ? uri : new URI(uri.toString())).toString();
     }
 
     protected async saveAll(): Promise<boolean> {
@@ -210,7 +208,8 @@ export class DebugSessionManager {
     protected async startConfiguration(options: DebugConfigurationSessionOptions): Promise<DebugSession | undefined> {
         return this.progressService.withProgress('Start...', 'debug', async () => {
             try {
-                if (!await this.saveAll()) {
+                // If a parent session is available saving should be handled by the parent
+                if (!options.configuration.parentSessionId && !options.configuration.suppressSaveBeforeStart && !await this.saveAll()) {
                     return undefined;
                 }
                 await this.fireWillStartDebugSession();
@@ -387,7 +386,7 @@ export class DebugSessionManager {
         const parentSession = options.configuration.parentSessionId ? this._sessions.get(options.configuration.parentSessionId) : undefined;
         const contrib = this.sessionContributionRegistry.get(options.configuration.type);
         const sessionFactory = contrib ? contrib.debugSessionFactory() : this.debugSessionFactory;
-        const session = sessionFactory.get(sessionId, options, parentSession);
+        const session = sessionFactory.get(this, sessionId, options, parentSession);
         this._sessions.set(sessionId, session);
 
         this.debugTypeKey.set(session.configuration.type);
@@ -517,7 +516,10 @@ export class DebugSessionManager {
                 }
                 this.fireDidChange(current);
             }));
-            this.disposeOnCurrentSessionChanged.push(current.onDidFocusStackFrame(frame => this.onDidFocusStackFrameEmitter.fire({ session: current, frame })));
+            this.disposeOnCurrentSessionChanged.push(current.onDidFocusStackFrame(frame => this.onDidFocusStackFrameEmitter.fire(frame)));
+            this.disposeOnCurrentSessionChanged.push(current.onDidFocusThread(thread => this.onDidFocusThreadEmitter.fire(thread)));
+            const { currentThread } = current;
+            this.onDidFocusThreadEmitter.fire(currentThread);
         }
         this.updateBreakpoints(previous, current);
         this.open();
@@ -525,7 +527,7 @@ export class DebugSessionManager {
     }
     open(): void {
         const { currentFrame } = this;
-        if (currentFrame) {
+        if (currentFrame && currentFrame.thread.stopped) {
             currentFrame.open();
         }
     }

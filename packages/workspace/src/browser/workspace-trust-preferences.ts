@@ -11,11 +11,11 @@
 // with the GNU Classpath Exception which is available at
 // https://www.gnu.org/software/classpath/license.html.
 //
-// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-only WITH Classpath-exception-2.0
 // *****************************************************************************
 
 import {
-    createPreferenceProxy, PreferenceContribution, PreferenceProxy, PreferenceSchema, PreferenceService
+    createPreferenceProxy, PreferenceContribution, PreferenceProxy, PreferenceSchema, PreferenceScope, PreferenceService
 } from '@theia/core/lib/browser/preferences';
 import { nls } from '@theia/core/lib/common/nls';
 import { interfaces } from '@theia/core/shared/inversify';
@@ -32,6 +32,7 @@ export enum WorkspaceTrustPrompt {
 
 export const workspaceTrustPreferenceSchema: PreferenceSchema = {
     type: 'object',
+    scope: PreferenceScope.User,
     properties: {
         [WORKSPACE_TRUST_ENABLED]: {
             description: nls.localize('theia/workspace/trustEnabled', 'Controls whether or not workspace trust is enabled. If disabled, all workspaces are trusted.'),

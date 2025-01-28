@@ -11,15 +11,19 @@
 // with the GNU Classpath Exception which is available at
 // https://www.gnu.org/software/classpath/license.html.
 //
-// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-only WITH Classpath-exception-2.0
 // *****************************************************************************
 
-import { ConfirmDialog, QuickInputService } from '@theia/core/lib/browser';
+import { ConfirmDialog, Dialog, QuickInputService } from '@theia/core/lib/browser';
+import { ReactDialog } from '@theia/core/lib/browser/dialogs/react-dialog';
+import { SelectComponent } from '@theia/core/lib/browser/widgets/select-component';
 import {
     Command, CommandContribution, CommandRegistry, MAIN_MENU_BAR,
     MenuContribution, MenuModelRegistry, MenuNode, MessageService, SubMenuOptions
 } from '@theia/core/lib/common';
 import { inject, injectable, interfaces } from '@theia/core/shared/inversify';
+import * as React from '@theia/core/shared/react';
+import { ReactNode } from '@theia/core/shared/react';
 
 const SampleCommand: Command = {
     id: 'sample-command',
@@ -50,6 +54,10 @@ const SampleQuickInputCommand: Command = {
     category: 'Quick Input',
     label: 'Test Positive Integer'
 };
+const SampleSelectDialog: Command = {
+    id: 'sample-command-select-dialog',
+    label: 'Sample Select Component Dialog'
+};
 
 @injectable()
 export class SampleCommandContribution implements CommandContribution {
@@ -61,6 +69,17 @@ export class SampleCommandContribution implements CommandContribution {
     protected readonly messageService: MessageService;
 
     registerCommands(commands: CommandRegistry): void {
+        commands.registerCommand({ id: 'create-quick-pick-sample', label: 'Internal QuickPick' }, {
+            execute: () => {
+                const pick = this.quickInputService.createQuickPick();
+                pick.items = [{ label: '1' }, { label: '2' }, { label: '3' }];
+                pick.onDidAccept(() => {
+                    console.log(`accepted: ${pick.selectedItems[0]?.label}`);
+                    pick.hide();
+                });
+                pick.show();
+            }
+        });
         commands.registerCommand(SampleCommand, {
             execute: () => {
                 alert('This is a sample command!');
@@ -101,6 +120,25 @@ export class SampleCommandContribution implements CommandContribution {
                     msg: mainDiv
                 }).open();
                 this.messageService.info(`Sample confirm dialog returned with: \`${JSON.stringify(choice)}\``);
+            }
+        });
+        commands.registerCommand(SampleSelectDialog, {
+            execute: async () => {
+                await new class extends ReactDialog<boolean> {
+                    constructor() {
+                        super({ title: 'Sample Select Component Dialog' });
+                        this.appendAcceptButton(Dialog.OK);
+                    }
+                    protected override render(): ReactNode {
+                        return React.createElement(SelectComponent, {
+                            options: Array.from(Array(10).keys()).map(i => ({ label: 'Option ' + ++i })),
+                            defaultValue: 0
+                        });
+                    }
+                    override get value(): boolean {
+                        return true;
+                    }
+                }().open();
             }
         });
         commands.registerCommand(SampleQuickInputCommand, {

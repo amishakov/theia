@@ -11,7 +11,7 @@
 // with the GNU Classpath Exception which is available at
 // https://www.gnu.org/software/classpath/license.html.
 //
-// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-only WITH Classpath-exception-2.0
 // *****************************************************************************
 
 import * as theia from '@theia/plugin';
@@ -325,8 +325,13 @@ export class TabsExtImpl implements TabsExt {
                 this.activeGroupId = activeTabGroupId;
             }
         }
-        this.onDidChangeTabGroups.fire(Object.freeze({ opened, closed, changed }));
-        this.onDidChangeTabs.fire({ opened: tabsOpened, changed: [], closed: [] });
+
+        if (closed.length > 0 || opened.length > 0 || changed.length > 0) {
+            this.onDidChangeTabGroups.fire(Object.freeze({ opened, closed, changed }));
+        }
+        if (tabsOpened.length > 0) {
+            this.onDidChangeTabs.fire({ opened: tabsOpened, changed: [], closed: [] });
+        }
     }
 
     $acceptTabGroupUpdate(groupDto: TabGroupDto): void {
