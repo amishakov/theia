@@ -42,6 +42,7 @@ export interface AIChatInputConfiguration {
     showContext?: boolean;
     showPinnedAgent?: boolean;
     showChangeSet?: boolean;
+    showSuggestions?: boolean;
 }
 
 @injectable()
@@ -180,6 +181,7 @@ export class AIChatInputWidget extends ReactWidget {
                 showContext={this.configuration?.showContext}
                 showPinnedAgent={this.configuration?.showPinnedAgent}
                 showChangeSet={this.configuration?.showChangeSet}
+                showSuggestions={this.configuration?.showSuggestions}
                 labelProvider={this.labelProvider}
                 actionService={this.changeSetActionService}
                 decoratorService={this.changeSetDecoratorService}
@@ -289,6 +291,7 @@ interface ChatInputProperties {
     showContext?: boolean;
     showPinnedAgent?: boolean;
     showChangeSet?: boolean;
+    showSuggestions?: boolean;
     labelProvider: LabelProvider;
     actionService: ChangeSetActionService;
     decoratorService: ChangeSetDecoratorService;
@@ -343,7 +346,7 @@ const ChatInput: React.FunctionComponent<ChatInputProperties> = (props: ChatInpu
                 fontSize: 13,
                 cursorWidth: 1,
                 maxHeight: -1,
-                scrollbar: { horizontal: 'hidden' },
+                scrollbar: { horizontal: 'hidden', alwaysConsumeMouseWheel: false, handleMouseWheel: true },
                 automaticLayout: true,
                 lineNumbers: 'off',
                 lineHeight,
@@ -361,6 +364,7 @@ const ChatInput: React.FunctionComponent<ChatInputProperties> = (props: ChatInpu
             });
 
             if (editorContainerRef.current) {
+                editorContainerRef.current.style.overflowY = 'auto'; // ensure vertical scrollbar
                 editorContainerRef.current.style.height = (lineHeight + (2 * paddingTop)) + 'px';
             }
 
@@ -593,7 +597,7 @@ const ChatInput: React.FunctionComponent<ChatInputProperties> = (props: ChatInpu
     const contextUI = buildContextUI(props.context, props.labelProvider, props.onDeleteContextElement, props.onOpenContextElement);
 
     return <div className='theia-ChatInput' onDragOver={props.onDragOver} onDrop={props.onDrop}    >
-        {<ChatInputAgentSuggestions suggestions={props.suggestions} opener={props.openerService} />}
+        {props.showSuggestions !== false && <ChatInputAgentSuggestions suggestions={props.suggestions} opener={props.openerService} />}
         {props.showChangeSet && changeSetUI?.elements &&
             <ChangeSetBox changeSet={changeSetUI} />
         }
