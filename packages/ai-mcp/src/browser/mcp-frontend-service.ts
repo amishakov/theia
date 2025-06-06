@@ -62,7 +62,7 @@ export class MCPFrontendServiceImpl implements MCPFrontendService {
         const functionIds = toolRequests.map(tool => `~{${tool.id}}`);
         const template = functionIds.join('\n');
 
-        this.promptService.storePromptTemplate({
+        this.promptService.addBuiltInPromptFragment({
             id: templateId,
             template
         });
@@ -70,7 +70,7 @@ export class MCPFrontendServiceImpl implements MCPFrontendService {
 
     async stopServer(serverName: string): Promise<void> {
         this.toolInvocationRegistry.unregisterAllTools(`mcp_${serverName}`);
-        this.promptService.removePrompt(this.getPromptTemplateId(serverName));
+        this.promptService.removePromptFragment(this.getPromptTemplateId(serverName));
         await this.mcpServerManager.stopServer(serverName);
     }
 
@@ -93,6 +93,10 @@ export class MCPFrontendServiceImpl implements MCPFrontendService {
             console.error('Error while trying to get tools: ' + error);
             return undefined;
         }
+    }
+
+    async addOrUpdateServer(description: MCPServerDescription): Promise<void> {
+        return this.mcpServerManager.addOrUpdateServer(description);
     }
 
     private convertToToolRequest(tool: Awaited<ReturnType<MCPServerManager['getTools']>>['tools'][number], serverName: string): ToolRequest {

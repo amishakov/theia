@@ -14,25 +14,33 @@
 // SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-only WITH Classpath-exception-2.0
 // *****************************************************************************
 
+import '../../src/browser/style/index.css';
+
 import { ContainerModule } from '@theia/core/shared/inversify';
 import { ChatAgent, DefaultChatAgentId, FallbackChatAgentId } from '@theia/ai-chat/lib/common';
 import { Agent, AIVariableContribution, bindToolProvider } from '@theia/ai-core/lib/common';
 import { ArchitectAgent } from './architect-agent';
 import { CoderAgent } from './coder-agent';
 import { SummarizeSessionCommandContribution } from './summarize-session-command-contribution';
-import { FileContentFunction, FileDiagonsticProvider, GetWorkspaceDirectoryStructure, GetWorkspaceFileList, WorkspaceFunctionScope } from './workspace-functions';
+import { FileContentFunction, FileDiagnosticProvider, GetWorkspaceDirectoryStructure, GetWorkspaceFileList, WorkspaceFunctionScope } from './workspace-functions';
 import { WorkspaceSearchProvider } from './workspace-search-provider';
 import { FrontendApplicationContribution, PreferenceContribution, WidgetFactory, bindViewContribution } from '@theia/core/lib/browser';
 import { TaskListProvider, TaskRunnerProvider } from './workspace-task-provider';
 import { WorkspacePreferencesSchema } from './workspace-preferences';
 import {
+    ClearFileChanges,
+    GetProposedFileState,
     ReplaceContentInFileFunctionHelper,
-    ReplaceContentInFileProvider,
-    SimpleReplaceContentInFileProvider,
-    WriteChangeToFileProvider
+    SuggestFileReplacements,
+    SimpleSuggestFileReplacements,
+    SuggestFileContent,
+    WriteFileContent,
+    WriteFileReplacements,
+    SimpleWriteFileReplacements
 } from './file-changeset-functions';
 import { OrchestratorChatAgent, OrchestratorChatAgentId } from '../common/orchestrator-chat-agent';
 import { UniversalChatAgent, UniversalChatAgentId } from '../common/universal-chat-agent';
+import { AppTesterChatAgent } from './app-tester-chat-agent';
 import { CommandChatAgent } from '../common/command-chat-agents';
 import { ListChatContext, ResolveChatContext, AddFileToChatContext } from './context-functions';
 import { AIAgentConfigurationWidget } from './ai-configuration/agent-configuration-widget';
@@ -41,6 +49,7 @@ import { AIAgentConfigurationViewContribution } from './ai-configuration/ai-conf
 import { AIConfigurationContainerWidget } from './ai-configuration/ai-configuration-widget';
 import { AIVariableConfigurationWidget } from './ai-configuration/variable-configuration-widget';
 import { ContextFilesVariableContribution } from '../common/context-files-variable';
+import { AIToolsConfigurationWidget } from './ai-configuration/tools-configuration-widget';
 import { TabBarToolbarContribution } from '@theia/core/lib/browser/shell/tab-bar-toolbar';
 import { AiConfigurationPreferences } from './ai-configuration/ai-configuration-preferences';
 import { TemplatePreferenceContribution } from './template-preference-contribution';
@@ -52,6 +61,7 @@ import { TaskContextSummaryVariableContribution } from './task-background-summar
 import { TaskContextFileStorageService } from './task-context-file-storage-service';
 import { TaskContextStorageService } from '@theia/ai-chat/lib/browser/task-context-service';
 import { CommandContribution } from '@theia/core';
+import { AIPromptFragmentsConfigurationWidget } from './ai-configuration/prompt-fragments-configuration-widget';
 
 export default new ContainerModule((bind, _unbind, _isBound, rebind) => {
     bind(PreferenceContribution).toConstantValue({ schema: WorkspacePreferencesSchema });
@@ -72,6 +82,10 @@ export default new ContainerModule((bind, _unbind, _isBound, rebind) => {
     bind(Agent).toService(UniversalChatAgent);
     bind(ChatAgent).toService(UniversalChatAgent);
 
+    bind(AppTesterChatAgent).toSelf().inSingletonScope();
+    bind(Agent).toService(AppTesterChatAgent);
+    bind(ChatAgent).toService(AppTesterChatAgent);
+
     bind(CommandChatAgent).toSelf().inSingletonScope();
     bind(Agent).toService(CommandChatAgent);
     bind(ChatAgent).toService(CommandChatAgent);
@@ -84,15 +98,17 @@ export default new ContainerModule((bind, _unbind, _isBound, rebind) => {
     bindToolProvider(GetWorkspaceFileList, bind);
     bindToolProvider(FileContentFunction, bind);
     bindToolProvider(GetWorkspaceDirectoryStructure, bind);
-    bindToolProvider(FileDiagonsticProvider, bind);
+    bindToolProvider(FileDiagnosticProvider, bind);
     bind(WorkspaceFunctionScope).toSelf().inSingletonScope();
     bindToolProvider(WorkspaceSearchProvider, bind);
 
-    bindToolProvider(WriteChangeToFileProvider, bind);
+    bindToolProvider(SuggestFileContent, bind);
+    bindToolProvider(WriteFileContent, bind);
     bindToolProvider(TaskListProvider, bind);
     bindToolProvider(TaskRunnerProvider, bind);
     bind(ReplaceContentInFileFunctionHelper).toSelf().inSingletonScope();
-    bindToolProvider(ReplaceContentInFileProvider, bind);
+    bindToolProvider(SuggestFileReplacements, bind);
+    bindToolProvider(WriteFileReplacements, bind);
     bindToolProvider(ListChatContext, bind);
     bindToolProvider(ResolveChatContext, bind);
     bind(AIConfigurationSelectionService).toSelf().inSingletonScope();
@@ -123,8 +139,20 @@ export default new ContainerModule((bind, _unbind, _isBound, rebind) => {
         }))
         .inSingletonScope();
 
-    bindToolProvider(SimpleReplaceContentInFileProvider, bind);
+    bindToolProvider(SimpleSuggestFileReplacements, bind);
+    bindToolProvider(SimpleWriteFileReplacements, bind);
+    bindToolProvider(ClearFileChanges, bind);
+    bindToolProvider(GetProposedFileState, bind);
     bindToolProvider(AddFileToChatContext, bind);
+
+    bind(AIToolsConfigurationWidget).toSelf();
+    bind(WidgetFactory)
+        .toDynamicValue(ctx => ({
+            id: AIToolsConfigurationWidget.ID,
+            createWidget: () => ctx.container.get(AIToolsConfigurationWidget)
+        }))
+        .inSingletonScope();
+
     bind(AIVariableContribution).to(ContextFilesVariableContribution).inSingletonScope();
     bind(PreferenceContribution).toConstantValue({ schema: AiConfigurationPreferences });
 
@@ -152,4 +180,11 @@ export default new ContainerModule((bind, _unbind, _isBound, rebind) => {
     rebind(TaskContextStorageService).toService(TaskContextFileStorageService);
 
     bind(CommandContribution).to(SummarizeSessionCommandContribution);
+    bind(AIPromptFragmentsConfigurationWidget).toSelf();
+    bind(WidgetFactory)
+        .toDynamicValue(ctx => ({
+            id: AIPromptFragmentsConfigurationWidget.ID,
+            createWidget: () => ctx.container.get(AIPromptFragmentsConfigurationWidget)
+        }))
+        .inSingletonScope();
 });

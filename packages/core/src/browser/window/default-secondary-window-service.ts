@@ -80,6 +80,10 @@ export class DefaultSecondaryWindowService implements SecondaryWindowService {
             });
         });
 
+        this.registerShutdownListeners();
+    }
+
+    protected registerShutdownListeners(): void {
         // Close all open windows when the main window is closed.
         this.windowService.onUnload(() => {
             // Iterate backwards because calling window.close might remove the window from the array
@@ -183,6 +187,10 @@ export class DefaultSecondaryWindowService implements SecondaryWindowService {
             }
         }
         return [height, width, left, top];
+    }
+
+    getWindows(): Window[] {
+        return this.secondaryWindows;
     }
 
     focus(win: Window): void {
