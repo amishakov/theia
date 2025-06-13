@@ -32,7 +32,7 @@ import {
     LanguageModelRegistryClient,
     languageModelRegistryDelegatePath,
     LanguageModelRegistryFrontendDelegate,
-    PromptCustomizationService,
+    PromptFragmentCustomizationService,
     PromptService,
     PromptServiceImpl,
     ToolProvider,
@@ -53,13 +53,14 @@ import { AICoreFrontendApplicationContribution } from './ai-core-frontend-applic
 import { bindAICorePreferences } from './ai-core-preferences';
 import { AgentSettingsPreferenceSchema } from './agent-preferences';
 import { AISettingsServiceImpl } from './ai-settings-service';
-import { FrontendPromptCustomizationServiceImpl } from './frontend-prompt-customization-service';
+import { DefaultPromptFragmentCustomizationService } from './frontend-prompt-customization-service';
 import { DefaultFrontendVariableService, FrontendVariableService } from './frontend-variable-service';
 import { PromptTemplateContribution } from './prompttemplate-contribution';
 import { FileVariableContribution } from './file-variable-contribution';
 import { TheiaVariableContribution } from './theia-variable-contribution';
 import { TodayVariableContribution } from '../common/today-variable-contribution';
 import { AgentsVariableContribution } from '../common/agents-variable-contribution';
+import { OpenEditorsVariableContribution } from './open-editors-variable-contribution';
 import { AIActivationService } from './ai-activation-service';
 import { AgentService, AgentServiceImpl } from '../common/agent-service';
 import { AICommandHandlerFactory } from './ai-command-handler-factory';
@@ -101,8 +102,8 @@ export default new ContainerModule(bind => {
     bindAICorePreferences(bind);
     bind(PreferenceContribution).toConstantValue({ schema: AgentSettingsPreferenceSchema });
 
-    bind(FrontendPromptCustomizationServiceImpl).toSelf().inSingletonScope();
-    bind(PromptCustomizationService).toService(FrontendPromptCustomizationServiceImpl);
+    bind(DefaultPromptFragmentCustomizationService).toSelf().inSingletonScope();
+    bind(PromptFragmentCustomizationService).toService(DefaultPromptFragmentCustomizationService);
     bind(PromptServiceImpl).toSelf().inSingletonScope();
     bind(PromptService).toService(PromptServiceImpl);
 
@@ -125,6 +126,7 @@ export default new ContainerModule(bind => {
     bind(AIVariableContribution).to(TodayVariableContribution).inSingletonScope();
     bind(AIVariableContribution).to(FileVariableContribution).inSingletonScope();
     bind(AIVariableContribution).to(AgentsVariableContribution).inSingletonScope();
+    bind(AIVariableContribution).to(OpenEditorsVariableContribution).inSingletonScope();
 
     bind(FrontendApplicationContribution).to(AICoreFrontendApplicationContribution).inSingletonScope();
 

@@ -127,6 +127,7 @@ import { AccessibilityInformation } from '@theia/core/lib/common/accessibility';
 import { TreeDelta } from '@theia/test/lib/common/tree-delta';
 import { TestItemDTO, TestOutputDTO, TestRunDTO, TestRunProfileDTO, TestRunRequestDTO, TestStateChangeDTO } from './test-types';
 import { ArgumentProcessor } from './commands';
+import { McpServerDefinitionRegistryMain, McpServerDefinitionRegistryExt } from './lm-protocol';
 
 export interface PreferenceData {
     [scope: number]: any;
@@ -312,7 +313,8 @@ export interface TerminalServiceExt {
     $terminalOnInput(id: string, data: string): void;
     $terminalSizeChanged(id: string, cols: number, rows: number): void;
     $currentTerminalChanged(id: string | undefined): void;
-    $terminalStateChanged(id: string): void;
+    $terminalOnInteraction(id: string): void;
+    $terminalShellTypeChanged(id: string, newShellType: string): void;
     $initEnvironmentVariableCollections(collections: [string, string, boolean, SerializableEnvironmentVariableCollection][]): void;
     $provideTerminalLinks(line: string, terminalId: string, token: theia.CancellationToken): Promise<ProvidedTerminalLink[]>;
     $handleTerminalLink(link: ProvidedTerminalLink): Promise<void>;
@@ -2091,7 +2093,7 @@ export type CommentThreadChanges = Partial<{
     comments: Comment[],
     collapseState: CommentThreadCollapsibleState;
     state: CommentThreadState;
-    canReply: boolean;
+    canReply: boolean | theia.CommentAuthorInformation;
 }>;
 
 export interface CommentsMain {
@@ -2345,7 +2347,8 @@ export const PLUGIN_RPC_CONTEXT = {
     TELEMETRY_MAIN: createProxyIdentifier<TelemetryMain>('TelemetryMain'),
     LOCALIZATION_MAIN: createProxyIdentifier<LocalizationMain>('LocalizationMain'),
     TESTING_MAIN: createProxyIdentifier<TestingMain>('TestingMain'),
-    URI_MAIN: createProxyIdentifier<UriMain>('UriMain')
+    URI_MAIN: createProxyIdentifier<UriMain>('UriMain'),
+    MCP_SERVER_DEFINITION_REGISTRY_MAIN: createProxyIdentifier<McpServerDefinitionRegistryMain>('McpServerDefinitionRegistryMain')
 };
 
 export const MAIN_RPC_CONTEXT = {
@@ -2388,7 +2391,8 @@ export const MAIN_RPC_CONTEXT = {
     TABS_EXT: createProxyIdentifier<TabsExt>('TabsExt'),
     TELEMETRY_EXT: createProxyIdentifier<TelemetryExt>('TelemetryExt)'),
     TESTING_EXT: createProxyIdentifier<TestingExt>('TestingExt'),
-    URI_EXT: createProxyIdentifier<UriExt>('UriExt')
+    URI_EXT: createProxyIdentifier<UriExt>('UriExt'),
+    MCP_SERVER_DEFINITION_REGISTRY_EXT: createProxyIdentifier<McpServerDefinitionRegistryExt>('McpServerDefinitionRegistryExt')
 };
 
 export interface TasksExt {

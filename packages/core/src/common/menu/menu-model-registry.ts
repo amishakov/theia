@@ -326,12 +326,25 @@ export class MenuModelRegistry {
         return this.findInNode(this.root, menuPath, 0);
     }
 
-    getMenu(menuPath: MenuPath): CompoundMenuNode {
+    getMenu(menuPath: MenuPath): CompoundMenuNode | undefined {
         const node = this.getMenuNode(menuPath);
+        if (!node) {
+            return undefined;
+        }
         if (!CompoundMenuNode.is(node)) {
             throw new Error(`not a compound menu node: ${JSON.stringify(menuPath)}`);
         }
         return node;
+    }
+
+    static removeSingleRootNodes(fullMenuModel: CompoundMenuNode): CompoundMenuNode {
+        let current = fullMenuModel;
+        let previous = undefined;
+        while (current !== previous) {
+            previous = current;
+            current = this.removeSingleRootNode(current);
+        }
+        return current;
     }
 
     /**
