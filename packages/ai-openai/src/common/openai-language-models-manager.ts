@@ -16,6 +16,8 @@
 export const OPENAI_LANGUAGE_MODELS_MANAGER_PATH = '/services/open-ai/language-model-manager';
 export const OpenAiLanguageModelsManager = Symbol('OpenAiLanguageModelsManager');
 
+export const OPENAI_PROVIDER_ID = 'openai';
+
 export interface OpenAiModelDescription {
     /**
      * The identifier of the model which will be shown in the UI.
@@ -52,6 +54,10 @@ export interface OpenAiModelDescription {
      * Flag to configure whether the OpenAPI model supports structured output. Default is `true`.
      */
     supportsStructuredOutput: boolean;
+    /**
+     * Maximum number of retry attempts when a request fails. Default is 3.
+     */
+    maxRetries: number;
 }
 export interface OpenAiLanguageModelsManager {
     apiKey: string | undefined;

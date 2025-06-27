@@ -45,6 +45,7 @@ import URI from '../../common/uri';
 import { OpenerService } from '../opener-service';
 import { PreviewableWidget } from '../widgets/previewable-widget';
 import { WindowService } from '../window/window-service';
+import { TheiaSplitPanel } from './theia-split-panel';
 
 /** The class name added to ApplicationShell instances. */
 export const APPLICATION_SHELL_CLASS = 'theia-ApplicationShell';
@@ -600,8 +601,9 @@ export class ApplicationShell extends Widget {
                     // the files were dragged from the outside the workspace
                     Array.from(event.dataTransfer.files).forEach(async file => {
                         if (environment.electron.is()) {
-                            if (file.path) {
-                                const fileUri = URI.fromFilePath(file.path);
+                            const path = window.electronTheiaCore.getPathForFile(file);
+                            if (path) {
+                                const fileUri = URI.fromFilePath(path);
                                 openUri(fileUri);
                             }
                         } else {
@@ -747,7 +749,7 @@ export class ApplicationShell extends Widget {
             [1, 0],
             { orientation: 'vertical', spacing: 0 }
         );
-        const panelForBottomArea = new SplitPanel({ layout: bottomSplitLayout });
+        const panelForBottomArea = new TheiaSplitPanel({ layout: bottomSplitLayout });
         panelForBottomArea.id = 'theia-bottom-split-panel';
 
         const leftRightSplitLayout = this.createSplitLayout(
@@ -755,7 +757,7 @@ export class ApplicationShell extends Widget {
             [0, 1, 0],
             { orientation: 'horizontal', spacing: 0 }
         );
-        const panelForSideAreas = new SplitPanel({ layout: leftRightSplitLayout });
+        const panelForSideAreas = new TheiaSplitPanel({ layout: leftRightSplitLayout });
         panelForSideAreas.id = 'theia-left-right-split-panel';
 
         return this.createBoxLayout(
@@ -1357,10 +1359,18 @@ export class ApplicationShell extends Widget {
             widget = this.rightPanelHandler.activate(id);
         }
         if (widget) {
-            this.windowService.focus();
+            this.focusWindowIfApplicationFocused();
             return widget;
         }
         return this.secondaryWindowHandler.activateWidget(id);
+    }
+
+    protected focusWindowIfApplicationFocused(): void {
+        // If this application has focus, then on widget activation, activate the window.
+        // If this application does not have focus, do not routinely steal focus.
+        if (this.secondaryWindowHandler.getFocusedWindow()) {
+            this.windowService.focus();
+        }
     }
 
     /**
@@ -1462,7 +1472,7 @@ export class ApplicationShell extends Widget {
             widget = this.rightPanelHandler.expand(id);
         }
         if (widget) {
-            this.windowService.focus();
+            this.focusWindowIfApplicationFocused();
             return widget;
         } else {
             return this.secondaryWindowHandler.revealWidget(id);

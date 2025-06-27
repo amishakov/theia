@@ -19,9 +19,11 @@ import { AI_CORE_PREFERENCES_TITLE } from '@theia/ai-core/lib/browser/ai-core-pr
 import { nls } from '@theia/core';
 
 export const PREF_AI_INLINE_COMPLETION_AUTOMATIC_ENABLE = 'ai-features.codeCompletion.automaticCodeCompletion';
+export const PREF_AI_INLINE_COMPLETION_DEBOUNCE_DELAY = 'ai-features.codeCompletion.debounceDelay';
 export const PREF_AI_INLINE_COMPLETION_EXCLUDED_EXTENSIONS = 'ai-features.codeCompletion.excludedFileExtensions';
 export const PREF_AI_INLINE_COMPLETION_MAX_CONTEXT_LINES = 'ai-features.codeCompletion.maxContextLines';
 export const PREF_AI_INLINE_COMPLETION_STRIP_BACKTICKS = 'ai-features.codeCompletion.stripBackticks';
+export const PREF_AI_INLINE_COMPLETION_CACHE_CAPACITY = 'ai-features.codeCompletion.cacheCapacity';
 
 export const AICodeCompletionPreferencesSchema: PreferenceSchema = {
     type: 'object',
@@ -34,6 +36,14 @@ export const AICodeCompletionPreferencesSchema: PreferenceSchema = {
             \n\
             Alternatively, you can manually trigger the code via the command "Trigger Inline Suggestion" or the default shortcut "Ctrl+Alt+Space".'),
             default: false
+        },
+        [PREF_AI_INLINE_COMPLETION_DEBOUNCE_DELAY]: {
+            title: nls.localize('theia/ai/completion/debounceDelay/title', 'Debounce Delay'),
+            type: 'number',
+            description: nls.localize('theia/ai/completion/debounceDelay/description',
+                'Controls the delay in milliseconds before triggering AI completions after changes have been detected in the editor.\
+                Requires `Automatic Code Completion` to be enabled. Enter 0 to disable the debounce delay.'),
+            default: 300
         },
         [PREF_AI_INLINE_COMPLETION_EXCLUDED_EXTENSIONS]: {
             title: nls.localize('theia/ai/completion/excludedFileExts/title', 'Excluded File Extensions'),
@@ -60,6 +70,15 @@ export const AICodeCompletionPreferencesSchema: PreferenceSchema = {
                 'Remove surrounding backticks from the code returned by some LLMs. If a backtick is detected, all content after the closing\
              backtick is stripped as well. This setting helps ensure plain code is returned when language models use markdown-like formatting.'),
             default: true
+        },
+        [PREF_AI_INLINE_COMPLETION_CACHE_CAPACITY]: {
+            title: nls.localize('theia/ai/completion/cacheCapacity/title', 'Code Completion Cache Capacity'),
+            type: 'number',
+            description: nls.localize('theia/ai/completion/cacheCapacity/description',
+                'Maximum number of code completions to store in the cache. A higher number can improve performance but will consume more memory.\
+                Minimum value is 10, recommended range is between 50-200.'),
+            default: 100,
+            minimum: 10
         }
     }
 };
