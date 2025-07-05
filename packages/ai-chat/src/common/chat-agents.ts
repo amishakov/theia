@@ -23,8 +23,8 @@ import {
     AgentSpecificVariables,
     AIVariableContext,
     AIVariableResolutionRequest,
-    CommunicationRecordingService,
     getTextOfResponse,
+    isLanguageModelStreamResponsePart,
     isTextResponsePart,
     isThinkingResponsePart,
     isToolCallResponsePart,
@@ -36,8 +36,8 @@ import {
     LanguageModelService,
     LanguageModelStreamResponse,
     PromptService,
-    PromptTemplate,
-    ResolvedPromptTemplate,
+    ResolvedPromptFragment,
+    PromptVariantSet,
     TextMessage,
     ToolCall,
     ToolRequest,
@@ -54,17 +54,19 @@ import { inject, injectable, named, postConstruct } from '@theia/core/shared/inv
 import { ChatAgentService } from './chat-agent-service';
 import {
     ChatModel,
-    MutableChatRequestModel,
+    ChatRequestModel,
     ChatResponseContent,
     ErrorChatResponseContentImpl,
     MarkdownChatResponseContentImpl,
-    ToolCallChatResponseContentImpl,
-    ChatRequestModel,
+    MutableChatRequestModel,
     ThinkingChatResponseContentImpl,
+    ToolCallChatResponseContentImpl,
+    ErrorChatResponseContent,
 } from './chat-model';
+import { ChatToolRequest, ChatToolRequestService } from './chat-tool-request-service';
 import { parseContents } from './parse-contents';
 import { DefaultResponseContentFactory, ResponseContentMatcher, ResponseContentMatcherProvider } from './response-content-matcher';
-import { ChatToolRequest, ChatToolRequestService } from './chat-tool-request-service';
+import { ImageContextVariable } from './image-context-variable';
 
 /**
  * System message content, enriched with function descriptions.
@@ -75,7 +77,7 @@ export interface SystemMessageDescription {
     functionDescriptions?: Map<string, ToolRequest>;
 }
 export namespace SystemMessageDescription {
-    export function fromResolvedPromptTemplate(resolvedPrompt: ResolvedPromptTemplate): SystemMessageDescription {
+    export function fromResolvedPromptFragment(resolvedPrompt: ResolvedPromptFragment): SystemMessageDescription {
         return {
             text: resolvedPrompt.text,
             functionDescriptions: resolvedPrompt.functionDescriptions
@@ -147,9 +149,6 @@ export abstract class AbstractChatAgent implements ChatAgent {
     @inject(DefaultResponseContentFactory)
     protected defaultContentFactory: DefaultResponseContentFactory;
 
-    @inject(CommunicationRecordingService)
-    protected recordingService: CommunicationRecordingService;
-
     readonly abstract id: string;
     readonly abstract name: string;
     readonly abstract languageModelRequirements: LanguageModelRequirement[];
@@ -158,7 +157,7 @@ export abstract class AbstractChatAgent implements ChatAgent {
     tags: string[] = ['Chat'];
     description: string = '';
     variables: string[] = [];
-    promptTemplates: PromptTemplate[] = [];
+    prompts: PromptVariantSet[] = [];
     agentSpecificVariables: AgentSpecificVariables[] = [];
     functions: string[] = [];
     protected readonly abstract defaultLanguageModelPurpose: string;
@@ -221,6 +220,7 @@ export abstract class AbstractChatAgent implements ChatAgent {
     };
 
     protected handleError(request: MutableChatRequestModel, error: Error): void {
+        console.error('Error handling chat interaction:', error);
         request.response.response.addContent(new ErrorChatResponseContentImpl(error));
         request.response.error(error);
     }
@@ -245,8 +245,8 @@ export abstract class AbstractChatAgent implements ChatAgent {
         if (this.systemPromptId === undefined) {
             return undefined;
         }
-        const resolvedPrompt = await this.promptService.getPrompt(this.systemPromptId, undefined, context);
-        return resolvedPrompt ? SystemMessageDescription.fromResolvedPromptTemplate(resolvedPrompt) : undefined;
+        const resolvedPrompt = await this.promptService.getResolvedPromptFragment(this.systemPromptId, undefined, context);
+        return resolvedPrompt ? SystemMessageDescription.fromResolvedPromptFragment(resolvedPrompt) : undefined;
     }
 
     protected async getMessages(
@@ -255,23 +255,41 @@ export abstract class AbstractChatAgent implements ChatAgent {
         const requestMessages = model.getRequests().flatMap(request => {
             const messages: LanguageModelMessage[] = [];
             const text = request.message.parts.map(part => part.promptText).join('');
-            messages.push({
-                actor: 'user',
-                type: 'text',
-                text: text,
-            });
-            if (request.response.isComplete || includeResponseInProgress) {
-                const responseMessages: LanguageModelMessage[] = request.response.response.content.flatMap(c => {
-                    if (ChatResponseContent.hasToLanguageModelMessage(c)) {
-                        return c.toLanguageModelMessage();
-                    }
-
-                    return {
-                        actor: 'ai',
-                        type: 'text',
-                        text: c.asString?.() ?? c.asDisplayString?.() ?? '',
-                    } as TextMessage;
+            if (text.length > 0) {
+                messages.push({
+                    actor: 'user',
+                    type: 'text',
+                    text: text,
                 });
+            }
+            const imageMessages = request.context.variables
+                .filter(variable => ImageContextVariable.isResolvedImageContext(variable))
+                .map(variable => ImageContextVariable.parseResolved(variable))
+                .filter(content => content !== undefined)
+                .map(content => ({
+                    actor: 'user' as const,
+                    type: 'image' as const,
+                    image: {
+                        base64data: content!.data,
+                        mimeType: content!.mimeType
+                    }
+                }));
+            messages.push(...imageMessages);
+
+            if (request.response.isComplete || includeResponseInProgress) {
+                const responseMessages: LanguageModelMessage[] = request.response.response.content
+                    .filter(c => !ErrorChatResponseContent.is(c))
+                    .flatMap(c => {
+                        if (ChatResponseContent.hasToLanguageModelMessage(c)) {
+                            return c.toLanguageModelMessage();
+                        }
+
+                        return {
+                            actor: 'ai',
+                            type: 'text',
+                            text: c.asString?.() ?? c.asDisplayString?.() ?? '',
+                        } as TextMessage;
+                    });
                 messages.push(...responseMessages);
             }
             return messages;
@@ -289,12 +307,6 @@ export abstract class AbstractChatAgent implements ChatAgent {
         const agentSettings = this.getLlmSettings();
         const settings = { ...agentSettings, ...request.session.settings };
         const tools = toolRequests.length > 0 ? toolRequests : undefined;
-        this.recordingService.recordRequest({
-            agentId: this.id,
-            sessionId: request.session.id,
-            requestId: request.id,
-            request: messages
-        });
         return this.languageModelService.sendRequest(
             languageModel,
             {
@@ -323,15 +335,6 @@ export abstract class AbstractChatAgent implements ChatAgent {
      * Subclasses may override this method to perform additional actions or keep the response open for processing further requests.
      */
     protected async onResponseComplete(request: MutableChatRequestModel): Promise<void> {
-        this.recordingService.recordResponse(
-            {
-                agentId: this.id,
-                sessionId: request.session.id,
-                requestId: request.id,
-                response: request.response.response.content.flatMap(c =>
-                    c.toLanguageModelMessage?.() ?? ({ type: 'text', actor: 'ai', text: c.asDisplayString?.() ?? c.asString?.() ?? JSON.stringify(c) }))
-            }
-        );
         return request.response.complete();
     }
 
@@ -396,12 +399,15 @@ export abstract class AbstractStreamParsingChatAgent extends AbstractChatAgent {
 
     protected async addStreamResponse(languageModelResponse: LanguageModelStreamResponse, request: MutableChatRequestModel): Promise<void> {
         let completeTextBuffer = '';
-        let startIndex = Math.max(0, request.response.response.content.length - 1);
-
+        let startIndex = request.response.response.content.length;
         for await (const token of languageModelResponse.stream) {
+            // Skip unknown tokens. For example OpenAI sends empty tokens around tool calls
+            if (!isLanguageModelStreamResponsePart(token)) {
+                console.debug(`Unknown token: '${JSON.stringify(token)}'. Skipping`);
+                continue;
+            }
             const newContent = this.parse(token, request);
-
-            if (!(isTextResponsePart(token) && token.content)) {
+            if (!isTextResponsePart(token)) {
                 // For non-text tokens (like tool calls), add them directly
                 if (isArray(newContent)) {
                     request.response.response.addContents(newContent);
@@ -409,7 +415,7 @@ export abstract class AbstractStreamParsingChatAgent extends AbstractChatAgent {
                     request.response.response.addContent(newContent);
                 }
                 // And reset the marker index and the text buffer as we skip matching across non-text tokens
-                startIndex = request.response.response.content.length - 1;
+                startIndex = request.response.response.content.length;
                 completeTextBuffer = '';
             } else {
                 // parse the entire text so far (since beginning of the stream or last non-text token)
