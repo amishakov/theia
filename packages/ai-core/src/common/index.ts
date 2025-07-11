@@ -16,7 +16,6 @@
 export * from './agent-service';
 export * from './agent';
 export * from './agents-variable-contribution';
-export * from './communication-recording-service';
 export * from './tool-invocation-registry';
 export * from './language-model-delegate';
 export * from './language-model-util';
@@ -32,3 +31,4 @@ export * from './language-model-service';
 export * from './token-usage-service';
 export * from './ai-variable-resource';
 export * from './configurable-in-memory-resources';
+export * from './notification-types';
